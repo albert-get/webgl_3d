@@ -147,7 +147,7 @@ void main()
                 <Script type="text/javascript" src="/js/Triangle.js"></Script>
                 <Script type="text/javascript" src="/js/SixPointedStar.js"></Script>
             </>
-            <canvas ref={canvas} id="canvasOne"  height="800" width="1200">若看到这个文字，说明浏览器不支持WebGL!</canvas>
+            <canvas ref={canvas}  height="800" width="1200">若看到这个文字，说明浏览器不支持WebGL!</canvas>
         </div>
     )
 }
