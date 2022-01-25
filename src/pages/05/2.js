@@ -81,12 +81,15 @@ export default function Index () {
 uniform mat4 uMVPMatrix; //总变换矩阵
 in vec3 aPosition;  //顶点位置
 out vec3 vPosition;//用于传递给片元着色器的顶点位置
+out vec4 vAmbient;//用于传递给片元着色器的环境光分量
 void main()
 {
    //根据总变换矩阵计算此次绘制此顶点位置
    gl_Position = uMVPMatrix * vec4(aPosition,1);
    //将顶点的位置传给片元着色器
    vPosition = aPosition;//将原始顶点位置传递给片元着色器
+   //将环境光强度传给片元着色器
+   vAmbient = vec4(0.8,0.8,0.8,1.0);
 }`
                 },{
                     type: 'fragment',
@@ -95,6 +98,7 @@ precision mediump float;
 uniform float uR;
 in vec2 mcLongLat;//接收从顶点着色器过来的参数
 in vec3 vPosition;//接收从顶点着色器过来的顶点位置
+in vec4 vAmbient;//接收从顶点着色器过来的环境光强度
 out vec4 fragColor;//输出的片元颜色
 void main()
 {
@@ -112,8 +116,10 @@ void main()
    else {//偶数时为白色
    \t\tcolor = vec3(1.0,1.0,1.0);//白色
    }
-\t//将计算出的颜色传递给管线
-   fragColor=vec4(color,1);
+//最终颜色
+   vec4 finalColor=vec4(color,1.0);
+\t//根据环境光强度计算最终片元颜色值
+   fragColor=finalColor*vAmbient;
 }`
                 }];
                 shaderProgArray[0] = loadShaderSerial(gl,array[0], array[1]);
@@ -130,11 +136,18 @@ void main()
 
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
                 ms.pushMatrix();
-                ms.translate(0,0,0);
+                ms.pushMatrix();
+                ms.translate(-0.6,0,0);
                 ms.rotate(currentYAngle,0,1,0);
                 ms.rotate(currentXAngle,1,0,0);
                 ball.drawSelf(ms);
-
+                ms.popMatrix();
+                ms.pushMatrix();
+                ms.translate(0.6,0,0);
+                ms.rotate(currentYAngle,0,1,0);
+                ms.rotate(currentXAngle,1,0,0);
+                ball.drawSelf(ms);
+                ms.popMatrix();
                 ms.popMatrix();
             }
 

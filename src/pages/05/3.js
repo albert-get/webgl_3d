@@ -74,46 +74,66 @@ export default function Index () {
                 ms.setCamera(0,0,-2,0,0,0,0,1,0);
                 ms.setProjectOrtho(-1.5,1.5,-1,1,1,100);
                 gl.enable(gl.DEPTH_TEST);
-
+                lightManager.setLightLocation(0,0,-2);
                 let array =[{
                     type:'vertex',
                     text:`#version 300 es
-uniform mat4 uMVPMatrix; //总变换矩阵
-in vec3 aPosition;  //顶点位置
-out vec3 vPosition;//用于传递给片元着色器的顶点位置
-void main()
-{
-   //根据总变换矩阵计算此次绘制此顶点位置
-   gl_Position = uMVPMatrix * vec4(aPosition,1);
-   //将顶点的位置传给片元着色器
-   vPosition = aPosition;//将原始顶点位置传递给片元着色器
+uniform mat4 uMVPMatrix; \t\t\t\t\t\t//总变换矩阵
+uniform mat4 uMMatrix; \t\t\t\t\t\t\t//变换矩阵(包括平移、旋转、缩放)
+uniform vec3 uLightLocation;\t\t\t\t\t\t//光源位置
+in vec3 aPosition;  \t\t\t\t\t\t//顶点位置
+in vec3 aNormal;    \t\t\t\t\t\t//顶点法向量
+out vec3 vPosition;\t\t\t\t\t\t\t//用于传递给片元着色器的顶点位置
+out vec4 vDiffuse;\t\t\t\t\t\t\t//用于传递给片元着色器的散射光分量
+vec4 pointLight (\t\t\t\t\t\t\t\t//散射光光照计算的方法
+  in vec3 normal,\t\t\t\t\t\t\t\t//法向量
+  in vec3 lightLocation,\t\t\t\t\t\t\t//光源位置
+  in vec4 lightDiffuse\t\t\t\t\t\t\t//散射光强度
+){
+  vec3 normalTarget=aPosition+normal;\t\t\t\t\t//计算变换后的法向量
+  vec3 newNormal=(uMMatrix*vec4(normalTarget,1)).xyz-(uMMatrix*vec4(aPosition,1)).xyz;
+  newNormal=normalize(newNormal);\t\t\t\t\t//对法向量规格化
+//计算从表面点到光源位置的向量vp
+  vec3 vp= normalize(lightLocation-(uMMatrix*vec4(aPosition,1)).xyz);
+  vp=normalize(vp);\t\t\t\t\t\t\t\t\t//规格化vp
+  float nDotViewPosition=max(0.0,dot(newNormal,vp)); \t//求法向量与vp向量的点积与0的最大值
+  //diffuse=lightDiffuse*nDotViewPosition;\t\t\t//计算散射光的最终强度
+  return lightDiffuse*nDotViewPosition;
+}
+void main(){
+   gl_Position = uMVPMatrix * vec4(aPosition,1); \t//根据总变换矩阵计算此次绘制此顶点的位置
+   vDiffuse=pointLight(normalize(aNormal),uLightLocation, vec4(0.8,0.8,0.8,1.0));//将散射光最终强度传给片元着色器
+   vPosition = aPosition; \t\t\t\t\t//将顶点的位置传给片元着色器
 }`
                 },{
                     type: 'fragment',
                     text:`#version 300 es
 precision mediump float;
 uniform float uR;
-in vec2 mcLongLat;//接收从顶点着色器过来的参数
 in vec3 vPosition;//接收从顶点着色器过来的顶点位置
-out vec4 fragColor;//输出的片元颜色
+in vec4 vDiffuse;//接收从顶点着色器过来的散射光最终强度
+out vec4 fragColor;
 void main()
 {
    vec3 color;
-   float n = 8.0;//外接立方体每个坐标轴方向切分的份数
-   float span = 2.0*uR/n;//每一份的尺寸（小方块的边长）
-   int i = int((vPosition.x + uR)/span);//当前片元位置小方块的行数
-   int j = int((vPosition.y + uR)/span);//当前片元位置小方块的层数
-   int k = int((vPosition.z + uR)/span);//当前片元位置小方块的列数
-    //计算当前片元行数、层数、列数的和并对2取模
+   float n = 8.0;//一个坐标分量分的总份数
+   float span = 2.0*uR/n;//每一份的长度
+   //每一维在立方体内的行列数
+   int i = int((vPosition.x + uR)/span);
+   int j = int((vPosition.y + uR)/span);
+   int k = int((vPosition.z + uR)/span);
+   //计算当点应位于白色块还是黑色块中
    int whichColor = int(mod(float(i+j+k),2.0));
-   if(whichColor==1) {//奇数时为红色
+   if(whichColor == 1) {//奇数时为红色
    \t\tcolor = vec3(0.678,0.231,0.129);//红色
    }
    else {//偶数时为白色
    \t\tcolor = vec3(1.0,1.0,1.0);//白色
    }
-\t//将计算出的颜色传递给管线
-   fragColor=vec4(color,1);
+   //最终颜色
+   vec4 finalColor=vec4(color,1.0)*vDiffuse;
+//根据散射光最终强度计算片元的最终颜色值
+   fragColor=vec4(finalColor.xyz,1.0);
 }`
                 }];
                 shaderProgArray[0] = loadShaderSerial(gl,array[0], array[1]);
@@ -127,14 +147,23 @@ void main()
                     console.log("加载未完成！");
                     return;
                 }
+                let lightOffset = 20;//获得当前拖拉条的值
+                lightManager.setLightLocation(-lightOffset,0,-4);
 
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
                 ms.pushMatrix();
-                ms.translate(0,0,0);
+                ms.pushMatrix();
+                ms.translate(-0.6,0,0);
                 ms.rotate(currentYAngle,0,1,0);
                 ms.rotate(currentXAngle,1,0,0);
                 ball.drawSelf(ms);
-
+                ms.popMatrix();
+                ms.pushMatrix();
+                ms.translate(0.6,0,0);
+                ms.rotate(currentYAngle,0,1,0);
+                ms.rotate(currentXAngle,1,0,0);
+                ball.drawSelf(ms);
+                ms.popMatrix();
                 ms.popMatrix();
             }
 
@@ -149,7 +178,9 @@ void main()
                 <Script type="text/javascript" src="/js/Matrix.js"></Script>
                 <Script type="text/javascript" src="/js/MatrixState.js"></Script>
                 <Script type="text/javascript" src="/js/GLUtil.js"></Script>
-                <Script type="text/javascript" src="/js/Ball.js"></Script>
+                <Script type="text/javascript" src="/js/Ball2.js"></Script>
+                <Script type="text/javascript" src="/js/LightManager.js"></Script>
+                <Script type="text/javascript" src="/js/FrameGlobalVar.js"></Script>
             </>
 
             <canvas height="800" width="1200" ref={canvas}>
