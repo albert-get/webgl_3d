@@ -2788,10 +2788,10 @@ text-table@^0.2.0:
   resolved "https://registry.nlark.com/text-table/download/text-table-0.2.0.tgz?cache=0&sync_timestamp=1618847142316&other_urls=https%3A%2F%2Fregistry.nlark.com%2Ftext-table%2Fdownload%2Ftext-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
-three@^0.137.5:
-  version "0.137.5"
-  resolved "https://registry.npmmirror.com/three/-/three-0.137.5.tgz#a1e34bedd0412f2d8797112973dfadac78022ce6"
-  integrity sha512-rTyr+HDFxjnN8+N/guZjDgfVxgHptZQpf6xfL/Mo7a5JYIFwK6tAq3bzxYYB4Ae0RosDZlDuP+X5aXDXz+XnHQ==
+three@0.93:
+  version "0.93.0"
+  resolved "https://registry.npmmirror.com/three/-/three-0.93.0.tgz#3fd6c367ef4554abbb6e16ad69936283e895c123"
+  integrity sha512-Ys9+UBBsd6FxTZZl4BH7B4b2F+B2uR0cOwY7OQ/aCzU/VgO4Wmmr1LbWPH1fsTvSVik9KAuwxwOHlSC4IMGOLA==
 
 timers-browserify@2.0.12:
   version "2.0.12"
