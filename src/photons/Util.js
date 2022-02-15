@@ -43,7 +43,7 @@ PHOTONS.Util = {
 
 		if ( ! this.objLoader ) {
 
-			this.objLoader = new THREE.OBJLoader( loadingManager );
+			this.objLoader = new THREE.OBJLoader( this.loadingManager );
 
 		}
 		if ( ! this.imageLoader ) {
