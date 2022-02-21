@@ -26,7 +26,7 @@ export const addMesh=(scene,directionLight)=>{
             console.log(`Meshes:${Meshes.length}||shadowGenerator:${shadowGenerator}${Date()}`);
             tempMesh.scaling=new BABYLON.Vector3(4.0,4.0,4.0);
             tempMesh.position=new BABYLON.Vector3(0,0,5);
-            tempMesh.receiveShadows=false;
+            tempMesh.receiveShadow=false;
             shadowGenerator.getShadowMap().renderList.push(tempMesh);    
         }
         skeleton.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
